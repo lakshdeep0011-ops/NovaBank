@@ -34,29 +34,25 @@ animation:move 8s infinite alternate;
 }
 
 @keyframes move{
-from{
-transform:translate(-150px,-100px);
-}
-to{
-transform:translate(150px,100px);
-}
+from{transform:translate(-150px,-100px);}
+to{transform:translate(150px,100px);}
 }
 
 .card{
 position:relative;
-width:340px;
+width:350px;
 padding:25px;
 border-radius:25px;
 background:rgba(255,255,255,0.08);
 backdrop-filter:blur(15px);
 box-shadow:0 0 30px rgba(0,0,0,0.4);
-animation:fade 1s;
+animation:fade 0.7s;
 }
 
 @keyframes fade{
 from{
 opacity:0;
-transform:translateY(30px);
+transform:translateY(20px);
 }
 to{
 opacity:1;
@@ -102,40 +98,47 @@ transition:0.3s;
 
 button:hover{
 transform:scale(1.03);
-background:#5597ff;
-}
-
-.balance{
-font-size:42px;
-font-weight:bold;
-text-align:center;
-margin:20px 0;
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-0%{transform:scale(1);}
-50%{transform:scale(1.05);}
-100%{transform:scale(1);}
-}
-
-.history{
-margin-top:15px;
-max-height:120px;
-overflow:auto;
-padding:10px;
-border-radius:14px;
-background:rgba(0,0,0,0.2);
 }
 
 .hidden{
 display:none;
 }
 
-.small{
+.balance{
+font-size:40px;
+font-weight:bold;
 text-align:center;
-margin-top:10px;
+margin:20px 0;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.history{
+margin-top:15px;
+padding:10px;
+border-radius:14px;
+background:rgba(0,0,0,0.2);
+max-height:140px;
+overflow:auto;
+}
+
+.cardbox{
+background:linear-gradient(135deg,#2f7df6,#5ba8ff);
+padding:18px;
+border-radius:18px;
+margin-bottom:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+
+.small{
 opacity:0.8;
+margin-top:8px;
+font-size:14px;
 }
 
 </style>
@@ -144,6 +147,8 @@ opacity:0.8;
 <body>
 
 <div class="bg"></div>
+
+<!-- LOGIN PAGE -->
 
 <div class="card" id="loginPage">
 
@@ -161,11 +166,9 @@ Login
 Create Account
 </button>
 
-<div class="small">
-Demo Banking Experience
 </div>
 
-</div>
+<!-- REGISTER PAGE -->
 
 <div class="card hidden" id="registerPage">
 
@@ -179,14 +182,37 @@ Demo Banking Experience
 Create Account
 </button>
 
+<button onclick="backLogin()">
+Back
+</button>
+
 </div>
+
+<!-- DASHBOARD -->
 
 <div class="card hidden" id="dashboard">
 
-<div class="logo">Dashboard</div>
+<div class="topbar">
+<h2>Dashboard</h2>
+
+<button style="width:90px;padding:10px;" onclick="logout()">
+Logout
+</button>
+</div>
+
+<div class="cardbox">
+
+<h3>Nova Demo Bank</h3>
+
+<div class="small">
+Account Number:
+<span id="accNum"></span>
+</div>
 
 <div class="balance">
 ₹<span id="money">0</span>
+</div>
+
 </div>
 
 <input id="depositAmount" type="number" placeholder="Deposit Amount">
@@ -203,12 +229,8 @@ Deposit Money
 Transfer Money
 </button>
 
-<button onclick="logout()">
-Logout
-</button>
-
 <div class="history" id="history">
-Transactions:
+<h3>Transaction History</h3>
 </div>
 
 </div>
@@ -216,6 +238,8 @@ Transactions:
 <script>
 
 let balance=0;
+
+let accountNumber=Math.floor(Math.random()*90000000)+10000000;
 
 function showRegister(){
 
@@ -225,11 +249,24 @@ document.getElementById("registerPage").classList.remove("hidden");
 
 }
 
+function backLogin(){
+
+document.getElementById("registerPage").classList.add("hidden");
+
+document.getElementById("loginPage").classList.remove("hidden");
+
+}
+
 function createAccount(){
 
 let user=document.getElementById("newUser").value;
 
 let pass=document.getElementById("newPass").value;
+
+if(user==="" || pass===""){
+alert("Fill all fields");
+return;
+}
 
 localStorage.setItem("user",user);
 
@@ -237,9 +274,7 @@ localStorage.setItem("pass",pass);
 
 alert("Account Created Successfully");
 
-document.getElementById("registerPage").classList.add("hidden");
-
-document.getElementById("loginPage").classList.remove("hidden");
+backLogin();
 
 }
 
@@ -250,11 +285,8 @@ let user=document.getElementById("loginUser").value;
 let pass=document.getElementById("loginPass").value;
 
 if(user==="admin" && pass==="admin123"){
-
 alert("Admin Login Success");
-
 return;
-
 }
 
 if(
@@ -266,6 +298,8 @@ pass===localStorage.getItem("pass")
 document.getElementById("loginPage").classList.add("hidden");
 
 document.getElementById("dashboard").classList.remove("hidden");
+
+document.getElementById("accNum").innerHTML=accountNumber;
 
 }
 else{
@@ -280,11 +314,18 @@ function deposit(){
 
 let amt=Number(document.getElementById("depositAmount").value);
 
+if(amt<=0){
+alert("Enter valid amount");
+return;
+}
+
 balance+=amt;
 
 document.getElementById("money").innerHTML=balance;
 
 addHistory("Deposited ₹"+amt);
+
+document.getElementById("depositAmount").value="";
 
 }
 
@@ -294,12 +335,19 @@ let user=document.getElementById("transferUser").value;
 
 let amt=Number(document.getElementById("transferAmount").value);
 
-if(amt>balance){
-
-alert("Insufficient Balance");
-
+if(user===""){
+alert("Enter receiver username");
 return;
+}
 
+if(amt<=0){
+alert("Enter valid amount");
+return;
+}
+
+if(amt>balance){
+alert("Insufficient Balance");
+return;
 }
 
 balance-=amt;
@@ -310,11 +358,15 @@ addHistory("Transferred ₹"+amt+" to "+user);
 
 alert("Transfer Successful");
 
+document.getElementById("transferUser").value="";
+document.getElementById("transferAmount").value="";
+
 }
 
 function addHistory(text){
 
-document.getElementById("history").innerHTML += "<br><br>"+text;
+document.getElementById("history").innerHTML +=
+"<p style='margin-top:10px;'>"+text+"</p>";
 
 }
 
